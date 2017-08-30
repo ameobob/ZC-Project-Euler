@@ -1,8 +1,5 @@
 package projectEuler;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -11,6 +8,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -19,26 +17,29 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
 public class ProjectEuler {
 	static Composite exerciseLayer;
+	static int page = 0;
+	static Button[]  btn = new Button[10];
+	static Label navCurPage;
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		Display display = new Display();
-		final Shell shell = new Shell(display);
+		final Shell shell = new Shell(display, SWT.SHELL_TRIM & (~SWT.RESIZE)); //Disabled resizing
 		final Group exGroup = new Group(shell, SWT.SHADOW_ETCHED_IN);
 		final Group problemStatementGroup = new Group(shell, SWT.SHADOW_ETCHED_IN);		
 		RowLayout twoColumnsRow = new RowLayout();
-		final RowLayout manyRows = new RowLayout();
-		RowData myRowData = new RowData();
+		//RowData myRowData = new RowData();
+		final RowLayout verticalRowLayout = new RowLayout(SWT.VERTICAL);
 		
 		shell.setText("ZC's Project Euler");
 		shell.setLayout(twoColumnsRow);
-		
 		problemStatementGroup.setLayout(new RowLayout(SWT.VERTICAL));
 		
 		twoColumnsRow.type = SWT.HORIZONTAL;				
@@ -46,133 +47,263 @@ public class ProjectEuler {
 		
 		exGroup.setLayout(new GridLayout());
 		exGroup.setText("Choose an exercise:");
-		Button  b1 = new Button(exGroup, SWT.RADIO);
-		Button  b2 = new Button(exGroup, SWT.RADIO);
-		Button  b3 = new Button(exGroup, SWT.RADIO);
-		Button  b4 = new Button(exGroup, SWT.RADIO);
-		Button  b5 = new Button(exGroup, SWT.RADIO);
-		Button  b6 = new Button(exGroup, SWT.RADIO);
-		Button  b7 = new Button(exGroup, SWT.RADIO);
-		Button  b8 = new Button(exGroup, SWT.RADIO);
-		Button  b9 = new Button(exGroup, SWT.RADIO);
-		Button b10 = new Button(exGroup, SWT.RADIO);
-
-		b1.setText("Multiples of 3 and 5");
-		b2.setText("Even Fibonacci numbers");
-		b3.setText("Largest prime factor");
-		b4.setText("Largest palindrome product");
-		b5.setText("Smallest multiple");
-		b6.setText("Sum square difference");
-		b7.setText("10001st prime");
-		b8.setText("Largest product in a series");
-		b9.setText("Special Pythagorean triplet");
-		b10.setText("Summation of primes");
-		//b11.setText("Largest product in a grid");
+		btn[0] = new Button(exGroup, SWT.RADIO);
+		btn[1] = new Button(exGroup, SWT.RADIO);
+		btn[2] = new Button(exGroup, SWT.RADIO);
+		btn[3] = new Button(exGroup, SWT.RADIO);
+		btn[4] = new Button(exGroup, SWT.RADIO);
+		btn[5] = new Button(exGroup, SWT.RADIO);
+		btn[6] = new Button(exGroup, SWT.RADIO);
+		btn[7] = new Button(exGroup, SWT.RADIO);
+		btn[8] = new Button(exGroup, SWT.RADIO);
+		btn[9] = new Button(exGroup, SWT.RADIO);
+		final Group pageNav = new Group(exGroup, SWT.NONE);
+		Button navPrev = new Button(pageNav, SWT.BUTTON1);
+		navPrev.setText("Prev");
+		navCurPage = new Label(pageNav, SWT.NONE);
+		Button navNext = new Button(pageNav, SWT.BUTTON1);
+		navNext.setText("Next");
+		pageNav.setLayout(new RowLayout());
+		/*
+		final Button  b2 = new Button(exGroup, SWT.RADIO);
+		final Button  b3 = new Button(exGroup, SWT.RADIO);
+		final Button  b4 = new Button(exGroup, SWT.RADIO);
+		final Button  b5 = new Button(exGroup, SWT.RADIO);
+		final Button  b6 = new Button(exGroup, SWT.RADIO);
+		final Button  b7 = new Button(exGroup, SWT.RADIO);
+		final Button  b8 = new Button(exGroup, SWT.RADIO);
+		final Button  b9 = new Button(exGroup, SWT.RADIO);
+		final Button b10 = new Button(exGroup, SWT.RADIO);
+		*/
+		updateProblemTitles();
 		
-		exGroup.setLayoutData(myRowData);
 		exGroup.pack();
 		
-		//problemStatementGroup.setSize(500, 500);
-		//problemStatement.setText("(Problem Statement)");
-		//problemStatement.pack();
-		//problemStatementGroup.setLayoutData(myRowData);
-		//problemStatementGroup.pack();
 		problemStatementGroup.setText("Problem Statement:");
 		
-		shell.setMinimumSize(600, 400);
-		exerciseLayer = createLayerP1(problemStatementGroup);
+		//For some reason there is a 22x56 decrease after it's actually created, probably top bar and borders but still, what the?
+		shell.setMinimumSize(1411+22, 720+56);
+		
+		exerciseLayer = new Composite(shell, SWT.NONE);
 		shell.pack();
 		shell.open();
 
+		//This listener only used to determine set size, then we disable resize when we know the optimal size.
+		//Ideally the text would wrap and provide scroll bars
+		/*
+		shell.addListener(SWT.Resize, new Listener(){
+
+			@Override
+			public void handleEvent(Event event) {
+				Rectangle rect = shell.getClientArea();
+				System.out.println(rect);
+			}
+		});
+		 */
 		
-		b1.addSelectionListener(new SelectionAdapter() {
+		Rectangle rect = shell.getClientArea();
+		System.out.println(rect);
+
+		navPrev.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP1(problemStatementGroup);
-			    problemStatementGroup.pack();
-				shell.requestLayout();
+				if (page != 0)
+				{
+					page = page - 1;
+					updateProblemTitles();
+					pageNav.pack();
+					exGroup.pack();
+					exerciseLayer.dispose();
+					exerciseLayer = new Composite(shell, SWT.NONE);
+					shell.requestLayout();
+				}
 			}
 		});
-		b2.addSelectionListener(new SelectionAdapter() {
+		navNext.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP2(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if (page != 1)
+				{
+					page = page + 1;
+					updateProblemTitles();
+					pageNav.pack();
+					exGroup.pack();
+					exerciseLayer.dispose();
+					exerciseLayer = new Composite(shell, SWT.NONE);
+					shell.requestLayout();
+				}
 			}
 		});
-		b3.addSelectionListener(new SelectionAdapter() {
+		
+		//I'd like to make this generic, with some function pointers, but for now this works. Maybe an array of buttons would be a good compromise.
+		btn[0].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP3(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[0].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP1(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP11(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[0].getSelection();
 			}
 		});
-		b4.addSelectionListener(new SelectionAdapter() {
+		btn[1].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP4(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[1].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP2(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP12(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[1].getSelection();
 			}
 		});
-		b5.addSelectionListener(new SelectionAdapter() {
+		btn[2].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP5(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[2].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP3(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP13(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[2].getSelection();
 			}
 		});
-		b6.addSelectionListener(new SelectionAdapter() {
+		btn[3].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP6(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[3].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP4(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP14(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[3].getSelection();
 			}
 		});
-		b7.addSelectionListener(new SelectionAdapter() {
+		btn[4].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP7(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[4].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP5(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP15(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[4].getSelection();
 			}
 		});
-		b8.addSelectionListener(new SelectionAdapter() {
+		btn[5].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP8(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[5].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP6(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP16(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[5].getSelection();
 			}
 		});
-		b9.addSelectionListener(new SelectionAdapter() {
+		btn[6].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP9(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[6].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP7(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP17(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[6].getSelection();
 			}
 		});
-		b10.addSelectionListener(new SelectionAdapter() {
+		btn[7].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				exerciseLayer.dispose();
-				exerciseLayer = createLayerP10(problemStatementGroup);
-				problemStatementGroup.pack();
-				shell.requestLayout();
+				if ((btn[7].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP8(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP18(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[7].getSelection();
+			}
+		});
+		btn[8].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if ((btn[8].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP9(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP19(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[8].getSelection();
+			}
+		});
+		btn[9].addSelectionListener(new SelectionAdapter() {
+			boolean lastState = false;
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if ((btn[9].getSelection() == true) && (lastState != true))
+				{
+					lastState = true;
+					exerciseLayer.dispose();
+					if      (page == 0) exerciseLayer = createLayerP10(problemStatementGroup);
+					else if (page == 1) exerciseLayer = createLayerP20(problemStatementGroup);
+					exerciseLayer.setLayout(verticalRowLayout);
+					problemStatementGroup.requestLayout();
+					shell.requestLayout();
+				}
+				lastState = btn[9].getSelection();
 			}
 		});
 
@@ -182,7 +313,39 @@ public class ProjectEuler {
 		display.dispose();
 	}
 	
-    private static Composite createLayerP1(final Composite parent) {
+    protected static void updateProblemTitles() {
+    	String text = new String();
+		if(page == 0)
+		{
+			btn[0].setText("Multiples of 3 and 5");
+			btn[1].setText("Even Fibonacci numbers");
+			btn[2].setText("Largest prime factor");
+			btn[3].setText("Largest palindrome product");
+			btn[4].setText("Smallest multiple");
+			btn[5].setText("Sum square difference");
+			btn[6].setText("10001st prime");
+			btn[7].setText("Largest product in a series");
+			btn[8].setText("Special Pythagorean triplet");
+			btn[9].setText("Summation of primes");
+		}
+		if(page == 1)
+		{
+			btn[0].setText("Largest product in a grid");
+			btn[1].setText("Highly divisible triangular number");
+			btn[2].setText("Large sum");
+			btn[3].setText("Longest Collatz sequence");
+			btn[4].setText("Lattice paths");
+			btn[5].setText("Power digit sum");
+			btn[6].setText("Number letter counts");
+			btn[7].setText("Maximum path sum I");
+			btn[8].setText("Counting Sundays");
+			btn[9].setText("Factorial digit sum");
+		}
+		text = String.format("Page %d of %d", page+1, 2);
+		navCurPage.setText(text);
+	}
+
+	private static Composite createLayerP1(final Composite parent) {
 
         final Composite layer = new Composite(parent, SWT.NONE);
         
@@ -190,7 +353,6 @@ public class ProjectEuler {
         final Label problemText = new Label(layer, SWT.NONE);
         final Button calculate = new Button(layer, SWT.PUSH);
         final Label answer = new Label(layer, SWT.BORDER);
-        layer.setLayout(new RowLayout(SWT.VERTICAL));
 
         problemText.setText("If we list all the natural numbers below 10 that are multiples of 3 or 5, we get 3, 5, 6 and 9. The sum of these multiples is 23.\n"
         		+ "\n"
@@ -223,6 +385,7 @@ public class ProjectEuler {
 				problemText.dispose();
 		        calculate.dispose();        
 		        answer.dispose();
+		        System.out.printf("Disposing of P1 layer\n");
 			}
 		});
         
@@ -240,7 +403,6 @@ public class ProjectEuler {
         final Label problemText = new Label(layer, SWT.NONE);
         final Button calculate = new Button(layer, SWT.PUSH);
         final Label answer = new Label(layer, SWT.BORDER);
-        layer.setLayout(new RowLayout(SWT.VERTICAL));
 
         problemText.setText("Each new term in the Fibonacci sequence is generated by adding the previous two terms. By starting with 1 and 2, the first 10 terms will be:\r"
 	    		+ "\r"
@@ -297,7 +459,6 @@ public class ProjectEuler {
         final Label problemText = new Label(layer, SWT.NONE);
         final Button calculate = new Button(layer, SWT.PUSH);
         final Label answer = new Label(layer, SWT.BORDER);
-        layer.setLayout(new RowLayout(SWT.VERTICAL));
 
         problemText.setText("The prime factors of 13195 are 5, 7, 13 and 29.\r"
         		+ "\r"
@@ -309,26 +470,29 @@ public class ProjectEuler {
             @Override
             public void widgetSelected(SelectionEvent e) {
             	long input = 600851475143L;
+            	//long input = 13195L;
+            	long inputFactored;
             	long i = 3;
-            	long test;
-            	String sresult = "1";
+            	String sresult = "";
             	long uppermost = (long) Math.sqrt(input);
             	System.out.printf("square root = %d\n", uppermost);
-            	for (i = 3; i < uppermost; i+=2)
+            	for (i = 2; i < uppermost; i++)
             	{
             		if (isPrime(i))
             		{
             			//System.out.printf("%d is prime.\n", i);
             			if (input % i == 0)
             			{
-            				test = input / i;
-            				sresult = String.format("%s %d", sresult, i);
-            				if (isPrime(test))
+            				inputFactored = input / i;
+            				uppermost = (long) Math.sqrt(Math.floor(inputFactored));
+            				System.out.printf("new factor=%d, inputFactored=%d, uppermost=%d\n", i, inputFactored, uppermost);
+            				if (sresult.length() == 0)
             				{
-            					uppermost = test - 1;
-            					sresult = String.format("%d", i);
-            					
-            					System.out.printf("Two primes, %d and %d\n", test, i);
+            					sresult = String.format("%d", i);            					
+            				}
+            				else
+            				{
+            					sresult = String.format("%s %d", sresult, i);
             				}
             				System.out.println(sresult);
             			}
@@ -362,7 +526,6 @@ public class ProjectEuler {
         final Label problemText = new Label(layer, SWT.NONE);
         final Button calculate = new Button(layer, SWT.PUSH);
         final Label answer = new Label(layer, SWT.BORDER);
-        layer.setLayout(new RowLayout(SWT.VERTICAL));
 
         problemText.setText("A palindromic number reads the same both ways. The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 × 99.\n"
         		+ "\n"
@@ -419,7 +582,6 @@ public class ProjectEuler {
 	    final Label problemText = new Label(layer, SWT.NONE);
 	    final Button calculate = new Button(layer, SWT.PUSH);
 	    final Label answer = new Label(layer, SWT.BORDER);
-	    layer.setLayout(new RowLayout(SWT.VERTICAL));
 
 	    problemText.setText("2520 is the smallest number that can be divided by each of the numbers from 1 to 10 without any remainder.\n"
 	    		+ "\n"
@@ -431,11 +593,14 @@ public class ProjectEuler {
 	        @Override
 	        public void widgetSelected(SelectionEvent e) {
 	        	String sresult = "";
-	        	int test = 20;
-	        	int result = 0;
+	        	int test = 64;
+	        	long result = 0;
 	        	int i;
+	        	int j = 0;
 	        	
-	        	while (result == 0)
+	        	/* Original answer:
+	        	 * while (result == 0)
+
 	        	{
 	        		for (i = 2; i <= 20; i++)
 	        		{
@@ -449,6 +614,23 @@ public class ProjectEuler {
 	        		{
 	        			result = test;
 	        			break;
+	        		}
+	        	}
+	        	 */
+	        	//result = 2 * 3 * 2 * 5 * 7 * 2 * 3 * 11 * 13 * 2 * 17 * 19;
+	        	//result = 2^4 + 3^2 + 5 + 7 + ....
+	        	result = 1;
+	        	for (i = 2; i < test; i++)
+	        	{
+	        		if (isPrime(i))
+	        		{
+		        		j = 0;
+		        		while (Math.pow(i,j+1) <= test)
+		        		{
+		        			j++;
+		        		}
+			        	result = result * (long)Math.pow(i,j);
+			        	System.out.printf("i=%d, j=%d\n", i, j);
 	        		}
 	        	}
 	        	sresult = String.format("%d", result);
@@ -480,7 +662,6 @@ public class ProjectEuler {
 	    final Label problemText = new Label(layer, SWT.NONE);
 	    final Button calculate = new Button(layer, SWT.PUSH);
 	    final Label answer = new Label(layer, SWT.BORDER);
-	    layer.setLayout(new RowLayout(SWT.VERTICAL));
 
 	    problemText.setText("The sum of the squares of the first ten natural numbers is:\n"
 	    		+ "1^2 + 2^2 + ... + 1=^2 = 385\n"
@@ -540,7 +721,6 @@ public class ProjectEuler {
 	    final Label problemText = new Label(layer, SWT.NONE);
 	    final Button calculate = new Button(layer, SWT.PUSH);
 	    final Label answer = new Label(layer, SWT.BORDER);
-	    layer.setLayout(new RowLayout(SWT.VERTICAL));
 
 	    problemText.setText("By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.\n"
 	    		+ "\n"
@@ -596,7 +776,6 @@ public class ProjectEuler {
 	    final Label problemText = new Label(layer, SWT.NONE);
 	    final Button calculate = new Button(layer, SWT.PUSH);
 	    final Label answer = new Label(layer, SWT.BORDER);
-	    layer.setLayout(new RowLayout(SWT.VERTICAL));
 
 	    problemText.setText("The four adjacent digits in the 1000-digit number that have the greatest product are 9 × 9 × 8 × 9 = 5832.\n"
 	    		+ "\n"
@@ -656,13 +835,13 @@ public class ProjectEuler {
 	        	int i;
 	        	String substring = "";
 	        	
-	        	System.out.printf("%s\n", testString);
+	        	//System.out.printf("%s\n", testString);
 	        	
 	        	for (startPos = 0; startPos < testString.length()-13; startPos++)
 	        	{
 	        		product = 1;
 	        		substring = testString.substring(startPos, startPos + 13);
-	        		System.out.printf("Substring = %s\n", substring);
+	        		//System.out.printf("Substring = %s\n", substring);
 	        		for (i = 0; i < 13; i++)
 	        		{
 	        			product = product * Character.getNumericValue(substring.charAt(i));
@@ -705,7 +884,6 @@ public class ProjectEuler {
 	    final Label problemText = new Label(layer, SWT.NONE);
 	    final Button calculate = new Button(layer, SWT.PUSH);
 	    final Label answer = new Label(layer, SWT.BORDER);
-	    layer.setLayout(new RowLayout(SWT.VERTICAL));
 
 	    problemText.setText("A Pythagorean triplet is a set of three natural numbers, a < b < c, for which,\n"
 	    		+ "a2 + b2 = c2\n"
@@ -769,56 +947,485 @@ public class ProjectEuler {
 	}
 	private static Composite createLayerP10(final Composite parent) {
 	
-    final Composite layer = new Composite(parent, SWT.NONE);
-    //put widgets in this layer
-    final Label problemText = new Label(layer, SWT.NONE);
-    final Button calculate = new Button(layer, SWT.PUSH);
-    final Label answer = new Label(layer, SWT.BORDER);
-    layer.setLayout(new RowLayout(SWT.VERTICAL));
-
-    problemText.setText("The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.\n"
-    		+ "Find the sum of all the primes below two million.");
-    calculate.setText("calculate");
-    answer.setText("Answer goes here...");
-
-    calculate.addSelectionListener(new SelectionAdapter() {
-        @Override
-        public void widgetSelected(SelectionEvent e) {
-        	long result = 0;
-        	String sresult = "";
-        	long sum = 2;
-        	
-        	for (int i = 3; i < 2000000; i+=2)
-        	{
-        		if (isPrime(i))
-        		{
-        			sum = sum + i;
-        			//System.out.printf("With the addition of %d, sum=%d\n", i, sum);
-        		}
-        	}
-        	result = sum;
-        	
-        	sresult = String.format("%d", result);
-        	answer.setText(sresult);
-        	answer.pack();
-        }
-    });
-
-	layer.addDisposeListener(new DisposeListener() {
-		@Override
-		public void widgetDisposed(DisposeEvent e) {
-			problemText.dispose();
-	        calculate.dispose();        
-	        answer.dispose();
-		}
-	});
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
 	
-	problemText.pack();
-	calculate.pack();        
-	answer.pack();
-	layer.pack();
+	    problemText.setText("The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.\n"
+	    		+ "Find the sum of all the primes below two million.");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
 	
-	return layer;
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	long sum = 2;
+	        	
+	        	for (int i = 3; i < 2000000; i+=2)
+	        	{
+	        		if (isPrime(i))
+	        		{
+	        			sum = sum + i;
+	        			//System.out.printf("With the addition of %d, sum=%d\n", i, sum);
+	        		}
+	        	}
+	        	result = sum;
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+	
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+		
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP11(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P11 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP12(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P12 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP13(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P13 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP14(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P14 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP15(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P15 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP16(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P16 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP17(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P17 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP18(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P18 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP19(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P19 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
+	}
+	private static Composite createLayerP20(final Composite parent) {
+		
+	    final Composite layer = new Composite(parent, SWT.NONE);
+	    //put widgets in this layer
+	    final Label problemText = new Label(layer, SWT.NONE);
+	    final Button calculate = new Button(layer, SWT.PUSH);
+	    final Label answer = new Label(layer, SWT.BORDER);
+
+	    //TODO: insert problem statement
+	    problemText.setText("P20 Insert problem statement here");
+	    calculate.setText("calculate");
+	    answer.setText("Answer goes here...");
+
+	    calculate.addSelectionListener(new SelectionAdapter() {
+	        @Override
+	        public void widgetSelected(SelectionEvent e) {
+	        	long result = 0;
+	        	String sresult = "";
+	        	
+	        	//TODO: solve the problem!
+	        	
+	        	sresult = String.format("%d", result);
+	        	answer.setText(sresult);
+	        	answer.pack();
+	        }
+	    });
+
+		layer.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				problemText.dispose();
+		        calculate.dispose();        
+		        answer.dispose();
+			}
+		});
+	
+		problemText.pack();
+		calculate.pack();        
+		answer.pack();
+		layer.pack();
+		
+		return layer;
 	}
 
 	protected static boolean isTriplet(int a, int b, int c) {
@@ -826,7 +1433,6 @@ public class ProjectEuler {
 		if (Math.pow(a,2) + Math.pow(b,2) == Math.pow(c,2)) return true;
 		return false;
 	}
-
 	protected static int reverse(int i) {
 		String input = new String();
 		String reversed = new String();
@@ -837,8 +1443,7 @@ public class ProjectEuler {
 		int j = Integer.parseInt(reversed);
 		return j;
 	}
-
-	protected static boolean isPrime(long input) {
+	protected static boolean isPrimeOld(long input) {
 		long i;
 		
 		if (input%2 == 0)
@@ -852,109 +1457,41 @@ public class ProjectEuler {
 		}
 		return true;
 	}
+	protected static boolean isPrime(long n) {
+		int root;
+		int j;
+		
+		if (n == 1) return false;
+		if (n < 4) return true; //2 and 3 are prime
+		if (n % 2 == 0) return false;
+		if (n < 9) return true; //we have already excluded 4, 6 and 8.
+		if (n % 3 == 0) return false;
+		root = (int) Math.floor( Math.sqrt(n) );
+		j = 5;
+		while (j <= root)
+		{
+			//Only 2 cases out of 6 that aren't multiples of 2 or 3, which were already excluded
+			if (n % j == 0) return false; //a multiple of 2, +1.  Also a multiple of 3, +2
+			if (n % (j+2) == 0) return false; //a multiple of 2, +3.  Also a multiple of 3, +1
+			j = j+6;
+		}
+		/* maybe something like this would improve performance, but it's not quite right.
+		if (n % 5 == 0) return false;
+		j = 7;
+		while (j <= root)
+		{
+			//only x cases out of 30 that aren't multiples of 2, 3, or 5
+			if (n%j == 0)    return false; //x*2+1, y*3+1, z*5+2 //7
+			if (n%j+4 == 0)  return false; //x*2+1, y*3+2, z*5+1 //11
+			if (n%j+6 == 0)  return false; //x*2+1, y*3+1, z*5+3 //13
+			if (n%j+10 == 0) return false; //x*2+1, y*3+2, z*5+2 //17
+			if (n%j+12 == 0) return false; //x*2+1, y*3+1, z*5+4 //19
+			if (n%j+16 == 0) return false; //x*2+1, y*3+2, z*5+3 //23
+			if (n%j+22 == 0) return false; //x*2+1, y*3+2, z*5+4 //29
+			if (n%j+24 == 0) return false; //x*2+1, y*3+1, z*5+1 //31
+			j = j+30;
+		}
+		*/
+		return true;
+	}
 }
-
-/*
-static int number = 0;
-private static List<Color> colors;
-private static int colorIndex;
-
-public static void main(String[] args) {
-
-    Display display = new Display();
-    Shell shell = new Shell(display);
-    colorIndex = 0;
-    colors = new ArrayList<>();
-    colors.add(Display.getDefault().getSystemColor(SWT.COLOR_RED));
-    colors.add(Display.getDefault().getSystemColor(SWT.COLOR_GREEN));
-    colors.add(Display.getDefault().getSystemColor(SWT.COLOR_YELLOW));
-    colors.add(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
-    colors.add(new Color (Display.getDefault(), 122, 122, 122));
-    colors.add(new Color (Display.getDefault(), 255, 51, 227));
-    colors.add(new Color (Display.getDefault(), 27, 82, 255));
-    colors.add(new Color (Display.getDefault(), 240, 201, 27));
-    colors.add(new Color (Display.getDefault(), 188, 188, 188));
-    colors.add(Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA));
-
-
-    GridLayout gridLayout = new GridLayout(1, false);
-    gridLayout.marginWidth = 0;
-    gridLayout.marginHeight = 0;
-    gridLayout.verticalSpacing = 0;
-    gridLayout.horizontalSpacing = 0;
-    shell.setLayout(gridLayout);
-
-    Composite top = new Composite(shell, SWT.NONE);
-    GridData d1 = new GridData(SWT.FILL, SWT.FILL, true, true);
-    top.setLayoutData(d1);
-    top.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_GREEN));
-
-    createLayer(shell);
-    createLayer(shell);
-    createLayer(shell);
-
-    shell.setBounds(100, 100, 800, 600);
-    shell.open();
-
-    while (!shell.isDisposed()) {
-        if (!display.readAndDispatch())
-            display.sleep();
-    }
-    display.dispose();
-}
-
-private static Composite createLayer(final Composite parent) {
-
-    final Composite layer = new Composite(parent, SWT.NONE);
-    layer.setLayout(new FillLayout());
-    for (int i = 0; i < 10; i++)
-    {
-        Label label = new Label(layer, SWT.NONE);
-        label.setText("I go \u26F7");
-        label.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseDown(MouseEvent e) {
-                Shell shell =Display.getDefault().getActiveShell();
-                MessageBox dialog =
-                        new MessageBox(shell, SWT.ICON_QUESTION | SWT.OK| SWT.CANCEL);
-                dialog.setText("My info");
-                dialog.setMessage("Do you really want to do this?");
-                dialog.open();
-
-            }
-
-        });
-    }
-    Button removeButton = new Button(layer, SWT.PUSH);
-    removeButton.setText("Remove");
-    removeButton.addSelectionListener(new SelectionAdapter() {
-        @Override
-        public void widgetSelected(SelectionEvent e) {
-            layer.dispose();
-            parent.requestLayout();
-        }
-    });
-
-    final Button addButton = new Button(layer, SWT.PUSH);
-    addButton.setText("Add");
-    addButton.addSelectionListener(new SelectionAdapter() {
-        @Override
-        public void widgetSelected(SelectionEvent e) {
-            Composite composite = createLayer(parent);
-            composite.moveAbove(addButton.getParent());
-            parent.requestLayout();
-
-        }
-    });
-
-
-    GridData d2 = new GridData(SWT.FILL, SWT.TOP, true, false);
-    layer.setLayoutData(d2);
-    if (colorIndex > colors.size()-1 ) {
-        colorIndex = 0;
-    }
-    layer.setBackground(colors.get(colorIndex++));
-    return layer;
-}
-*/
